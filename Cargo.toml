@@ -3,6 +3,8 @@ name = "git-cmd"
 authors = ["parth"]
 version = "0.0.0"
 edition = "2024"
+description = "A command-line like wrapper around git2."
+license = "MIT"
 
 [dependencies]
 
