@@ -1,0 +1,9 @@
+[package]
+name = "git-cmd"
+authors = ["parth"]
+version = "0.0.0"
+edition = "2024"
+
+[dependencies]
+
+git2 = "0.20.1"
