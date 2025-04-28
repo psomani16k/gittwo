@@ -1,5 +1,5 @@
 [package]
-name = "git-cmd"
+name = "gittwo"
 authors = ["parth"]
 version = "0.0.0"
 edition = "2024"
