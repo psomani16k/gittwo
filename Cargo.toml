@@ -4,7 +4,11 @@ authors = ["parth <psomani16k@gmail.com>"]
 version = "0.0.1"
 edition = "2024"
 description = "A command-line like wrapper around git2."
-license = "MIT"
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["git"]
+documentation = "https://docs.rs/gittwo/latest/gittwo/"
+repository = "https://github.com/psomani16k/gittwo"
 
 [dependencies]
 
