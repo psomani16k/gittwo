@@ -16,6 +16,7 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
+    /// Create a `GitRepository` from an existing repository.
     pub fn open(path: &Path) -> Result<Self, Error> {
         let repo = Repository::open(path)?;
         return Ok(GitRepository {
@@ -25,6 +26,7 @@ impl GitRepository {
         });
     }
 
+    /// Create an empty `GitRepository` object. Use this for cloning a repository.
     pub fn new() -> Self {
         GitRepository {
             cred: GitCredentials::Default,
@@ -33,18 +35,27 @@ impl GitRepository {
         }
     }
 
+    /// Set credentials of the type username and password. Used when interacting
+    /// with a remote repository over HTTPS.
     pub fn set_user_pass(&mut self, user: impl Into<String>, pass: impl Into<String>) {
         let http_cred = GitHttpsCredentials::new(Some(user.into()), Some(pass.into()));
         self.cred = GitCredentials::Https(http_cred);
     }
 
+    /// Set credentials of the type username. Used when interacting
+    /// with a remote repository over HTTPS.
     pub fn set_user(&mut self, user: impl Into<String>) {
         let http_cred = GitHttpsCredentials::new(Some(user.into()), None);
         self.cred = GitCredentials::Https(http_cred);
     }
 
+    /// Performs an action equivalent to `git clone`. Returns `Ok(())` if the repository
+    /// is already cloned. If not, clones the repository and makes `self` ready for other
+    /// operations on the repository.
     pub fn git_clone(&mut self, config: CloneConfig) -> Result<(), Error> {
-        let mut config = config;
+        if self.repository.is_some() {
+            return Ok(());
+        }
         let mut fetch_options = FetchOptions::new();
         let mut repo_builder = RepoBuilder::new();
         let mut callbacks = RemoteCallbacks::new();
