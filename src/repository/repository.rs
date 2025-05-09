@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use git2::{
-    AutotagOption, CertificateCheckStatus, Error, ErrorClass, ErrorCode, FetchOptions, Remote,
-    RemoteCallbacks, Repository, build::RepoBuilder,
+    AutotagOption, CertificateCheckStatus, Error, FetchOptions, Remote, RemoteCallbacks,
+    Repository, build::RepoBuilder,
 };
 
 use crate::CloneConfig;
@@ -44,6 +44,13 @@ impl GitRepository {
     }
 
     pub fn git_clone(&mut self, config: CloneConfig) -> Result<(), Error> {
+        let mut config = config;
+        let mut fetch_options = FetchOptions::new();
+        let mut repo_builder = RepoBuilder::new();
+        let mut callbacks = RemoteCallbacks::new();
+        let mut callbacks2 = RemoteCallbacks::new();
+        let mut remote = Remote::create_detached(config.url.clone())?;
+
         // skip user verification if configured so
         if config.skip_owner_validation {
             unsafe {
@@ -52,58 +59,74 @@ impl GitRepository {
         }
 
         // continue even if cert checks fail, if configured so
-        let mut callbacks = RemoteCallbacks::new();
         if config.bypass_certificate_check {
             callbacks.certificate_check(|_, _| Ok(CertificateCheckStatus::CertificateOk));
         }
 
         // setting up credentials
         let cred = self.cred.clone();
+        let cred2 = self.cred.clone();
         callbacks.credentials(move |_a: &str, _b, _c| {
             return cred.get_cred();
         });
+        callbacks2.credentials(move |_a: &str, _b, _c| {
+            return cred2.get_cred();
+        });
 
-        let mut fetch_options = FetchOptions::new();
-        fetch_options.remote_callbacks(callbacks);
-
-        let mut remote = Remote::create_detached(config.get_url())?;
-        remote.connect(git2::Direction::Fetch)?;
+        let remote = remote.connect_auth(git2::Direction::Fetch, Some(callbacks2), None)?;
+        let mut def_branch: Vec<u8> = vec![];
+        remote.default_branch()?.clone_into(&mut def_branch);
+        let def_branch = String::from_utf8(def_branch);
+        let mut def_branch = def_branch.unwrap_or("main".to_string());
+        def_branch = def_branch.split("/").last().unwrap_or("main").to_string();
 
         // getting the name of the repository
-        let repo_path;
+        let repo_path = config.get_parent_path().join(config.get_clone_dir_name());
 
-        if let Some(repo_name) = remote.name() {
-            let parent_path = config.get_parent_path();
-            repo_path = parent_path.join(repo_name);
-            self.repo_path = Some(repo_path.clone());
-        } else {
-            return Err(Error::new(
-                ErrorCode::NotFound,
-                ErrorClass::Object,
-                "remote name not found",
-            ));
-        }
+        // +---------------+
+        // | SETTING FLAGS |
+        // +---------------+
 
-        let mut repo_builder = RepoBuilder::new();
-
-        // setting flags
-        if let Some(depth) = config.flags.depth {
-            let depth: i32 = depth.get() as i32;
-            fetch_options.depth(depth);
-        }
-
-        if let Some(()) = config.flags.single_branch {
-            fetch_options.download_tags(AutotagOption::None);
-        }
-
+        // branch
         if let Some(branch) = &config.flags.branch {
-            repo_builder.branch(branch);
+            def_branch = branch.to_string();
         }
 
-        repo_builder.bare(config.flags.bare);
+        // depth
+        if let Some(depth) = config.flags.depth {
+            let depth: i32 = depth as i32;
+            fetch_options.depth(depth);
+            fetch_options.download_tags(AutotagOption::None);
+            let branch = def_branch.clone();
+            repo_builder.remote_create(move |repo, name, url| {
+                let refspec = format!("+refs/heads/{0:}:refs/remotes/origin/{0:}", branch);
+                repo.remote_with_fetch(name, url, &refspec)
+            });
+        }
+
+        // single-branch
+        if config.flags.single_branch {
+            fetch_options.download_tags(AutotagOption::None);
+            let branch = def_branch.clone();
+            repo_builder.remote_create(move |repo, name, url| {
+                let refspec = format!("+refs/heads/{0:}:refs/remotes/origin/{0:}", branch);
+                repo.remote_with_fetch(name, url, &refspec)
+            });
+        }
+
+        // bare
+        let repo_builder = repo_builder.bare(config.flags.bare);
+
+        // +--------------+
+        // | CLONING REPO |
+        // +--------------+
+
+        let repo_builder = repo_builder.branch(&def_branch);
+
+        fetch_options.remote_callbacks(callbacks);
 
         // setting fetch options and cloning
-        repo_builder.fetch_options(fetch_options);
+        let repo_builder = repo_builder.fetch_options(fetch_options);
         self.repository = Some(repo_builder.clone(config.get_url(), &repo_path)?);
 
         Ok(())
