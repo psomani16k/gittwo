@@ -54,8 +54,8 @@ impl GitHttpsCredentials {
     }
 }
 
-#[derive(Clone)]
-pub(crate) struct GitSshCredentials {}
+// #[derive(Clone)]
+// pub(crate) struct GitSshCredentials {}
 
 pub enum CredType {
     UserPassPlainText,

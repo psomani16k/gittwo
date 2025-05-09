@@ -2,7 +2,7 @@ use std::path::Path;
 
 use git2::{Error, Repository};
 
-use super::credentials::{GitCredentials, GitHttpsCredentials};
+use super::credentials::{CredType, GitCredentials, GitHttpsCredentials};
 
 pub struct GitRepository {
     pub(crate) repository: Option<Repository>,
@@ -24,6 +24,13 @@ impl GitRepository {
         GitRepository {
             cred: GitCredentials::Default,
             repository: None,
+        }
+    }
+
+    pub fn get_cred_type(&self) -> Result<CredType, Error> {
+        match &self.cred {
+            GitCredentials::Https(git_https_credentials) => git_https_credentials.get_cred_type(),
+            GitCredentials::Default => Ok(CredType::Default),
         }
     }
 
