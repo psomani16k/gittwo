@@ -18,8 +18,6 @@ pub struct CloneConfig {
     pub(crate) url: String,
     pub(crate) sender: Option<mpsc::Sender<(usize, String)>>,
     pub(crate) flags: CloneFlagsInternal,
-    pub(crate) skip_owner_validation: bool,
-    pub(crate) bypass_certificate_check: bool,
 }
 
 impl CloneConfig {
@@ -44,26 +42,14 @@ impl CloneConfig {
             url,
             flags: CloneFlagsInternal::default(),
             sender: None,
-            skip_owner_validation: false,
-            bypass_certificate_check: false,
         }
     }
 
     // getters
 
-    /// Returns true if owner validation is to be skipped, false otherwise.
-    pub fn get_skip_owner_validation(&self) -> bool {
-        self.skip_owner_validation
-    }
-
     /// Returns the url set for the repository to be cloned.
     pub fn get_url(&self) -> &str {
         &self.url
-    }
-
-    /// Returns true if certification checks are to be bypassed, false otherwise.
-    pub fn get_bypass_certificate_check(&self) -> bool {
-        self.bypass_certificate_check
     }
 
     /// Returns the consumer (Receiver) end of a mpsc. Intended to receive
@@ -91,16 +77,6 @@ impl CloneConfig {
     }
 
     // setters
-
-    /// Set true to skip owner validation.
-    pub fn skip_owner_validation(&mut self, skip: bool) {
-        self.skip_owner_validation = skip;
-    }
-
-    /// Set true to skip certification checks.
-    pub fn bypass_certificate_check(&mut self, bypass: bool) {
-        self.bypass_certificate_check = bypass;
-    }
 
     /// Set a custom name for the cloned repository. This will only change
     /// the name of the directory that will be formed, parent path will still
@@ -166,14 +142,14 @@ impl GitRepository {
         let mut remote = Remote::create_detached(config.url.clone())?;
 
         // skip user verification if configured so
-        if config.skip_owner_validation {
+        if self.skip_owner_validation {
             unsafe {
                 git2::opts::set_verify_owner_validation(false)?;
             };
         }
 
         // continue even if cert checks fail, if configured so
-        if config.bypass_certificate_check {
+        if self.bypass_certificate_check {
             callbacks.certificate_check(|_, _| Ok(CertificateCheckStatus::CertificateOk));
         }
 

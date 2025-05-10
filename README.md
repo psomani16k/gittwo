@@ -20,7 +20,9 @@
 - [ ] Pull
 - [ ] Push 
 - [ ] Commit 
-- [ ] Add (staging) 
+- [x] Add (staging) 
+    - [x] `--update`
+    - [x] `--dry-run`
 - [ ] Restore
 - [ ] Checkout 
 - [ ] Remote 

@@ -3,6 +3,8 @@ pub extern crate git2;
 mod configs;
 mod helpers;
 
+pub use self::configs::add_config::AddConfig;
+pub use self::configs::add_config::AddFlags;
 pub use self::configs::clone_config::CloneConfig;
 pub use self::configs::clone_config::CloneFlags;
 pub use self::configs::init_config::InitConfig;
