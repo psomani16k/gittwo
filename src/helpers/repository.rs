@@ -13,10 +13,10 @@ impl GitRepository {
     /// Create a `GitRepository` from an existing repository.
     pub fn open(path: &Path) -> Result<Self, Error> {
         let repo = Repository::open(path)?;
-        return Ok(GitRepository {
+        Ok(GitRepository {
             cred: GitCredentials::Default,
             repository: Some(repo),
-        });
+        })
     }
 
     /// Create an empty `GitRepository` object. Use this for cloning a repository.

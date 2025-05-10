@@ -32,7 +32,7 @@ impl CloneConfig {
     pub fn new(url: impl Into<String>, parent_dir: &Path) -> Self {
         let target_dir: String = url.into();
         let url = target_dir.clone();
-        let target_dir = target_dir.split("/").into_iter().last().unwrap();
+        let target_dir = target_dir.split("/").last().unwrap();
         let target_dir = match target_dir.strip_suffix(".git") {
             Some(t) => t,
             None => target_dir,
@@ -41,7 +41,7 @@ impl CloneConfig {
         CloneConfig {
             clone_dir_name: target_dir.to_string(),
             parent_path: parent_dir.to_path_buf(),
-            url: url.into(),
+            url,
             flags: CloneFlagsInternal::default(),
             sender: None,
             skip_owner_validation: false,
@@ -53,17 +53,17 @@ impl CloneConfig {
 
     /// Returns true if owner validation is to be skipped, false otherwise.
     pub fn get_skip_owner_validation(&self) -> bool {
-        return self.skip_owner_validation;
+        self.skip_owner_validation
     }
 
     /// Returns the url set for the repository to be cloned.
     pub fn get_url(&self) -> &str {
-        return &self.url;
+        &self.url
     }
 
     /// Returns true if certification checks are to be bypassed, false otherwise.
     pub fn get_bypass_certificate_check(&self) -> bool {
-        return self.bypass_certificate_check;
+        self.bypass_certificate_check
     }
 
     /// Returns the consumer (Receiver) end of a mpsc. Intended to receive
@@ -71,12 +71,12 @@ impl CloneConfig {
     pub fn get_update_channel(&mut self) -> mpsc::Receiver<(usize, String)> {
         let (sender, receiver) = mpsc::channel();
         self.sender = Some(sender);
-        return receiver;
+        receiver
     }
 
     /// Returns the directory where the repository is to be cloned.
     pub fn get_parent_path(&self) -> PathBuf {
-        return self.parent_path.clone();
+        self.parent_path.clone()
     }
 
     /// Returns the name of the directory where the content of the repository will
@@ -84,10 +84,10 @@ impl CloneConfig {
     pub fn get_clone_dir_name(&self) -> String {
         if self.flags.bare {
             let mut dir = self.clone_dir_name.clone();
-            dir = dir + ".git";
+            dir += ".git";
             return dir;
         }
-        return self.clone_dir_name.clone();
+        self.clone_dir_name.clone()
     }
 
     // setters
@@ -120,23 +120,12 @@ impl CloneConfig {
     }
 }
 
-#[derive(Clone, PartialEq, PartialOrd)]
+#[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct CloneFlagsInternal {
     pub(crate) branch: Option<String>, // Branch(String),
     pub(crate) depth: Option<usize>,   // Depth(NonZeroUsize),
     pub(crate) single_branch: bool,    // SingleBranch,
     pub(crate) bare: bool,
-}
-
-impl Default for CloneFlagsInternal {
-    fn default() -> Self {
-        CloneFlagsInternal {
-            branch: None,
-            depth: None,
-            single_branch: false,
-            bare: false,
-        }
-    }
 }
 
 /// An enum representing the various flags that can be added to the `git clone` command.
@@ -191,12 +180,8 @@ impl GitRepository {
         // setting up credentials
         let cred = self.cred.clone();
         let cred2 = self.cred.clone();
-        callbacks.credentials(move |_a: &str, _b, _c| {
-            return cred.get_cred();
-        });
-        callbacks2.credentials(move |_a: &str, _b, _c| {
-            return cred2.get_cred();
-        });
+        callbacks.credentials(move |_a: &str, _b, _c| cred.get_cred());
+        callbacks2.credentials(move |_a: &str, _b, _c| cred2.get_cred());
 
         let remote = remote.connect_auth(git2::Direction::Fetch, Some(callbacks2), None)?;
         let mut def_branch: Vec<u8> = vec![];

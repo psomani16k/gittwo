@@ -13,6 +13,7 @@
     - [x] `--bare`
     - [x] `--depth`
     - [ ] `--recusive`
+- [ ] Init
 - [ ] Pull
 - [ ] Push 
 - [ ] Commit 
@@ -24,7 +25,7 @@
 - [ ] Branch
 
 ### Credentials
-- [ ] HTTPS
+- [x] HTTPS
 - [ ] SSH
 
 ## License

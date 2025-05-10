@@ -1,8 +1,11 @@
 pub extern crate git2;
 
 mod configs;
-mod repository;
+mod helpers;
 
 pub use self::configs::clone_config::CloneConfig;
 pub use self::configs::clone_config::CloneFlags;
-pub use self::repository::repository::GitRepository;
+pub use self::configs::init_config::InitConfig;
+pub use self::configs::init_config::InitFlags;
+pub use self::helpers::credentials::CredType;
+pub use self::helpers::repository::GitRepository;

@@ -25,18 +25,18 @@ pub(crate) struct GitHttpsCredentials {
 
 impl GitHttpsCredentials {
     pub fn new(user: Option<String>, pass: Option<String>) -> Self {
-        return GitHttpsCredentials { user, pass };
+        GitHttpsCredentials { user, pass }
     }
 
     pub(crate) fn get_cred(&self) -> Result<Cred, Error> {
         if let Some(user) = &self.user {
             if let Some(pass) = &self.pass {
-                return Cred::userpass_plaintext(&user, &pass);
+                return Cred::userpass_plaintext(user, pass);
             } else {
-                return Cred::username(&user);
+                return Cred::username(user);
             }
         }
-        return Cred::default();
+        Cred::default()
     }
 
     pub fn get_cred_type(&self) -> Result<CredType, Error> {
