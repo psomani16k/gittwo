@@ -1,7 +1,4 @@
-use std::{
-    fs::create_dir_all,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use git2::{Error, Repository, RepositoryInitOptions};
 
@@ -21,14 +18,15 @@ impl InitConfig {
         }
     }
 
-    pub fn get_dir(&self) -> PathBuf {
-        self.dir.clone()
+    pub fn get_dir(&self) -> &Path {
+        &self.dir
     }
 
     pub fn add_flags(&mut self, flag: InitFlags) {
         match flag {
             InitFlags::InitialBranch(branch) => self.flags.initial_branch = branch,
             InitFlags::Bare(bare) => self.flags.bare = bare,
+            InitFlags::SeparateGitDir(path) => self.flags.separate_git_dir = Some(path),
         };
     }
 }
@@ -37,12 +35,14 @@ impl InitConfig {
 pub(crate) struct InitFlagsInternal {
     initial_branch: Option<String>,
     bare: bool,
+    separate_git_dir: Option<PathBuf>,
 }
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum InitFlags {
     InitialBranch(Option<String>),
     Bare(bool),
+    SeparateGitDir(PathBuf),
 }
 
 impl GitRepository {
@@ -54,7 +54,10 @@ impl GitRepository {
             init_opts.initial_head(&branch);
         }
 
-        let _ = create_dir_all(&config.dir);
+        if let Some(path) = config.flags.separate_git_dir {
+            init_opts.workdir_path(&path);
+        }
+
         let repository = Repository::init_opts(config.dir, &init_opts)?;
         self.repository = Some(repository);
         Ok(())

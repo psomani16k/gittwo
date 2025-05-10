@@ -4,7 +4,7 @@
 
 ## What works?
 
-> Level 1 items are the commands without any flags, level 2 items are the list of flags. Anything not in this list isn't supported by default.
+*Level 1 items are the commands without any flags, level 2 items are the list of flags. Anything not in this list isn't supported by default. Whatever is in the list but not checked will be added eventually (barring lack of support on the libgit2 side).*
 
 ### Commands
 - [x] Clone
@@ -13,7 +13,10 @@
     - [x] `--bare`
     - [x] `--depth`
     - [ ] `--recusive`
-- [ ] Init
+- [x] Init
+    - [x] `--bare`
+    - [x] `--initial-branch`
+    - [x] `--separate-git-dir`
 - [ ] Pull
 - [ ] Push 
 - [ ] Commit 

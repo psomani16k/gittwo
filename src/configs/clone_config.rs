@@ -75,8 +75,8 @@ impl CloneConfig {
     }
 
     /// Returns the directory where the repository is to be cloned.
-    pub fn get_parent_path(&self) -> PathBuf {
-        self.parent_path.clone()
+    pub fn get_parent_path(&self) -> &Path {
+        &self.parent_path
     }
 
     /// Returns the name of the directory where the content of the repository will
