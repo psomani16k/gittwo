@@ -40,6 +40,10 @@ pub enum AddFlags {
 
 impl GitRepository {
     pub fn git_add(&self, config: AddConfig) -> Result<(), Error> {
+        unsafe {
+            git2::opts::set_verify_owner_validation(self.skip_owner_validation)?;
+        };
+
         if let Some(repository) = &self.repository {
             let mut index = repository.index()?;
 

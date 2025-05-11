@@ -47,6 +47,9 @@ pub enum InitFlags {
 
 impl GitRepository {
     pub fn git_init(&mut self, config: InitConfig) -> Result<(), Error> {
+        unsafe {
+            git2::opts::set_verify_owner_validation(self.skip_owner_validation)?;
+        };
         let mut init_opts = RepositoryInitOptions::new();
 
         init_opts.bare(config.flags.bare);

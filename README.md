@@ -17,17 +17,22 @@
     - [x] `--bare`
     - [x] `--initial-branch`
     - [x] `--separate-git-dir`
-- [ ] Pull
-- [ ] Push 
-- [ ] Commit 
 - [x] Add (staging) 
     - [x] `--update`
     - [x] `--dry-run`
+- [x] Commit 
+    - [x] `--message`
+    - [x] `--allow-empty-message`
+- [ ] Push 
+- [ ] Pull
+    - [ ] `--rebase`
 - [ ] Restore
+    - [ ] `--staged`
 - [ ] Checkout 
 - [ ] Remote 
 - [ ] Status 
 - [ ] Branch
+- [ ] Stash
 
 ### Credentials
 - [x] HTTPS
