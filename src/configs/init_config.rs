@@ -22,7 +22,7 @@ impl InitConfig {
         &self.dir
     }
 
-    pub fn add_flags(&mut self, flag: InitFlags) {
+    pub fn add_flag(&mut self, flag: InitFlags) {
         match flag {
             InitFlags::InitialBranch(branch) => self.flags.initial_branch = branch,
             InitFlags::Bare(bare) => self.flags.bare = bare,

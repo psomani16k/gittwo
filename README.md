@@ -24,7 +24,10 @@
     - [x] `--message`
     - [x] `--allow-empty-message`
 - [ ] Push 
+    - [ ] `--set-upstream`
+    - [ ] `--all`
 - [ ] Pull
+    - [ ] `--unshallow`
     - [ ] `--rebase`
 - [ ] Restore
     - [ ] `--staged`
@@ -33,6 +36,9 @@
 - [ ] Status 
 - [ ] Branch
 - [ ] Stash
+- [ ] Fetch
+- [ ] Merge
+- [ ] Reset
 
 ### Credentials
 - [x] HTTPS

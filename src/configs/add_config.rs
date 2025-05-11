@@ -19,7 +19,7 @@ impl AddConfig {
         &self.spec
     }
 
-    pub fn add_flags(&mut self, flag: AddFlags) {
+    pub fn add_flag(&mut self, flag: AddFlags) {
         match flag {
             AddFlags::Update(update) => self.flags.update = update,
             AddFlags::DryRun(dry) => self.flags.dry_run = dry,
