@@ -1,9 +1,8 @@
-use std::fmt::format;
-
 use git2::{CertificateCheckStatus, Error, PushOptions, RemoteCallbacks};
 
 use crate::GitRepository;
 
+#[derive(Default, Clone)]
 pub struct PushConfig {
     remote: Option<String>,
     branch: Option<String>,
@@ -15,6 +14,14 @@ impl PushConfig {
         Self {
             remote: None,
             branch: None,
+            flags: PushFlagsInternal::default(),
+        }
+    }
+
+    pub fn with_remote_and_branch(remote: Option<String>, branch: Option<String>) -> Self {
+        Self {
+            remote,
+            branch,
             flags: PushFlagsInternal::default(),
         }
     }
@@ -31,7 +38,7 @@ impl PushConfig {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(crate) struct PushFlagsInternal {
     set_upstream: bool,
 }
@@ -66,7 +73,6 @@ impl GitRepository {
             callbacks.credentials(move |_a: &str, _b, _c| cred.get_cred());
 
             remote.connect_auth(git2::Direction::Push, Some(callbacks), None)?;
-
 
             return Ok(());
         }
