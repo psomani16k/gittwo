@@ -27,11 +27,13 @@ impl CommitConfig {
         config.add_flag(CommitFlags::Message(message));
         return config;
     }
-    pub fn add_flag(&mut self, flag: CommitFlags) {
+
+    pub fn add_flag(&mut self, flag: CommitFlags) -> &Self {
         match flag {
             CommitFlags::Message(msg) => self.flags.message = msg,
             CommitFlags::AllowEmptyMessage(allow) => self.flags.allow_empty_message = allow,
         }
+        self
     }
 
     fn get_signature(&self) -> Result<Signature, Error> {

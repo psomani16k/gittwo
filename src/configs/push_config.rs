@@ -31,10 +31,11 @@ impl PushConfig {
         self.branch = branch;
     }
 
-    pub fn add_flag(&mut self, flag: PushFlags) {
+    pub fn add_flag(&mut self, flag: PushFlags) -> &Self {
         match flag {
             PushFlags::SetUpstream(set) => self.flags.set_upstream = set,
-        }
+        };
+        self
     }
 }
 
@@ -49,30 +50,82 @@ pub enum PushFlags {
 
 impl GitRepository {
     pub fn git_push(&self, config: PushConfig) -> Result<(), Error> {
-        // skip user verification if configured so
-        if self.skip_owner_validation {
-            unsafe {
-                git2::opts::set_verify_owner_validation(false)?;
-            };
-        }
-
         // if the repository is valid
         if let Some(repository) = &self.repository {
+            // skip user verification if configured so
+            if self.skip_owner_validation {
+                unsafe {
+                    git2::opts::set_verify_owner_validation(false)?;
+                };
+            }
+
+            let remote_name = config.remote;
+            let remote_branch_name = config.branch;
+
             let mut callbacks = RemoteCallbacks::new();
             let mut options = PushOptions::new();
-            let mut remote =
-                repository.find_remote(&config.remote.unwrap_or(String::from("origin")))?;
+            let mut remote = match &remote_name {
+                Some(rem) => repository.find_remote(rem)?,
+                None => repository.find_remote("origin")?,
+            };
 
             // continue even if cert checks fail, if configured so
             if self.bypass_certificate_check {
                 callbacks.certificate_check(|_, _| Ok(CertificateCheckStatus::CertificateOk));
             }
 
+            // setup credentials
             let cred = self.cred.clone();
-
             callbacks.credentials(move |_a: &str, _b, _c| cred.get_cred());
 
-            remote.connect_auth(git2::Direction::Push, Some(callbacks), None)?;
+            options.remote_callbacks(callbacks);
+
+            let branch = repository.head()?;
+            let src_branch = match branch.name() {
+                Some(branch) => branch,
+                None => {
+                    return Err(Error::from_str(
+                        "Could not resolve the reference pointed by HEAD",
+                    ));
+                }
+            };
+
+            let dest_branch = match &remote_branch_name {
+                Some(branch) => format!("refs/heads/{}", branch),
+                None => {
+                    let dest = repository.branch_upstream_remote(src_branch)?;
+                    dest.as_str().unwrap_or(src_branch).to_string()
+                }
+            };
+
+            let refspec = format!("{}:{}", src_branch, dest_branch);
+            println!("{}", refspec);
+
+            // +-------+
+            // | FLAGS |
+            // +-------+
+
+            // upstream
+            if config.flags.set_upstream {
+                if let (Some(remote_name), Some(branch_name)) = (&remote_name, &remote_branch_name)
+                {
+                    let mut branch = repository
+                        .find_branch(branch.shorthand().unwrap(), git2::BranchType::Local)?;
+
+                    let rem = format!("{}/{}", remote_name, branch_name);
+                    branch.set_upstream(Some(&rem))?;
+                } else {
+                    return Err(Error::from_str(
+                        "The current branch has no upstream branch, please provide remote and branch to PushConfig",
+                    ));
+                }
+            }
+
+            // +------+
+            // | PUSH |
+            // +------+
+
+            remote.push(&[&refspec], Some(&mut options))?;
 
             return Ok(());
         }

@@ -22,12 +22,13 @@ impl InitConfig {
         &self.dir
     }
 
-    pub fn add_flag(&mut self, flag: InitFlags) {
+    pub fn add_flag(&mut self, flag: InitFlags) -> &Self {
         match flag {
             InitFlags::InitialBranch(branch) => self.flags.initial_branch = branch,
             InitFlags::Bare(bare) => self.flags.bare = bare,
             InitFlags::SeparateGitDir(path) => self.flags.separate_git_dir = Some(path),
         };
+        self
     }
 }
 

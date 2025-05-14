@@ -86,13 +86,14 @@ impl CloneConfig {
     }
 
     /// "Pass" a flag to the git clone command.
-    pub fn add_flag(&mut self, flag: CloneFlags) {
+    pub fn add_flag(&mut self, flag: CloneFlags) -> &Self {
         match flag {
             CloneFlags::Branch(branch) => self.flags.branch = branch,
             CloneFlags::Depth(depth) => self.flags.depth = depth,
             CloneFlags::SingleBranch(single) => self.flags.single_branch = single,
             CloneFlags::Bare(bare) => self.flags.bare = bare,
         }
+        self
     }
 }
 

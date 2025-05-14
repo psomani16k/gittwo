@@ -23,8 +23,8 @@
 - [x] Commit 
     - [x] `--message`
     - [x] `--allow-empty-message`
-- [ ] Push 
-    - [ ] `--set-upstream`
+- [x] Push 
+    - [x] `--set-upstream`
     - [ ] `--all`
 - [ ] Pull
     - [ ] `--unshallow`
