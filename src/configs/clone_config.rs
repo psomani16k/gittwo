@@ -219,3 +219,80 @@ impl GitRepository {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::{CloneConfig, CloneFlags};
+    use crate::GitRepository;
+    use std::{env, path::Path, process::Command, thread::sleep, time::Duration};
+
+    #[test]
+    fn git_clone_depth_test() {
+        // create temp directories
+        Command::new("mkdir")
+            .args(["-p", "./temp_test/"])
+            .output()
+            .unwrap();
+
+        // clone git2 using gittwo
+        let mut repo = GitRepository::new();
+        let mut config = CloneConfig::new(
+            "https://github.com/rust-lang/git2-rs.git",
+            Path::new("./temp_test/"),
+        );
+        config.add_flag(CloneFlags::Depth(Some(1)));
+        repo.git_clone(config).unwrap();
+
+        // verify that a single commit is cloned in
+        env::set_current_dir(&Path::new("./temp_test/git2-rs/")).unwrap();
+        let out = Command::new("git")
+            .args(["rev-list", "--count", "--all"])
+            .output()
+            .unwrap();
+
+        // clean the directory formed
+        env::set_current_dir(&Path::new("../..")).unwrap();
+        Command::new("rm")
+            .args(["temp_test", "-rf"])
+            .output()
+            .unwrap();
+
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "1\n");
+        sleep(Duration::from_secs(1));
+    }
+
+    #[test]
+    fn git_clone_bare_test() {
+        // create temp directories
+        Command::new("mkdir")
+            .args(["-p", "./temp_test/"])
+            .output()
+            .unwrap();
+
+        // clone git2 using gittwo
+        let mut repo = GitRepository::new();
+        let mut config = CloneConfig::new(
+            "https://github.com/rust-lang/git2-rs.git",
+            Path::new("./temp_test/"),
+        );
+        config.add_flag(CloneFlags::Bare(true));
+        repo.git_clone(config).unwrap();
+
+        // verify that a single commit is cloned in
+        env::set_current_dir(&Path::new("./temp_test/git2-rs.git/")).unwrap();
+        let out = Command::new("git")
+            .args(["rev-parse", "--is-bare-repository"])
+            .output()
+            .unwrap();
+
+        // clean the directory formed
+        env::set_current_dir(&Path::new("../..")).unwrap();
+        Command::new("rm")
+            .args(["temp_test", "-rf"])
+            .output()
+            .unwrap();
+
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "true\n");
+        sleep(Duration::from_secs(1));
+    }
+}
