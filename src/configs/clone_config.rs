@@ -113,7 +113,7 @@ pub enum CloneFlags {
     Branch(Option<String>),
 
     /// `--depth n` flag for git clone.
-    /// Some(n) will set depth to n, None will unset the flag
+    /// Some(n) will set depth to n, None will unset the flag.
     /// Defaults to None.
     Depth(Option<usize>),
 
@@ -224,13 +224,13 @@ impl GitRepository {
 mod test {
     use super::{CloneConfig, CloneFlags};
     use crate::GitRepository;
-    use std::{env, path::Path, process::Command, thread::sleep, time::Duration};
+    use std::{io::BufRead, path::Path, process::Command, thread::sleep, time::Duration};
 
     #[test]
     fn git_clone_depth_test() {
         // create temp directories
         Command::new("mkdir")
-            .args(["-p", "./temp_test/"])
+            .args(["-p", "./temp_test/clone_depth"])
             .output()
             .unwrap();
 
@@ -238,34 +238,35 @@ mod test {
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
             "https://github.com/rust-lang/git2-rs.git",
-            Path::new("./temp_test/"),
+            Path::new("./temp_test/clone_depth"),
         );
         config.add_flag(CloneFlags::Depth(Some(1)));
         repo.git_clone(config).unwrap();
 
         // verify that a single commit is cloned in
-        env::set_current_dir(&Path::new("./temp_test/git2-rs/")).unwrap();
         let out = Command::new("git")
-            .args(["rev-list", "--count", "--all"])
+            .args([
+                "-C",
+                "./temp_test/clone_depth/git2-rs/",
+                "rev-list",
+                "--count",
+                "--all",
+            ])
             .output()
             .unwrap();
 
-        // clean the directory formed
-        env::set_current_dir(&Path::new("../..")).unwrap();
         Command::new("rm")
-            .args(["temp_test", "-rf"])
+            .args(["-rf", "./temp_test/clone_depth/"])
             .output()
             .unwrap();
-
         assert_eq!(String::from_utf8_lossy(&out.stdout), "1\n");
-        sleep(Duration::from_secs(1));
     }
 
     #[test]
     fn git_clone_bare_test() {
         // create temp directories
         Command::new("mkdir")
-            .args(["-p", "./temp_test/"])
+            .args(["-p", "./temp_test/clone_bare"])
             .output()
             .unwrap();
 
@@ -273,26 +274,93 @@ mod test {
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
             "https://github.com/rust-lang/git2-rs.git",
-            Path::new("./temp_test/"),
+            Path::new("./temp_test/clone_bare"),
         );
         config.add_flag(CloneFlags::Bare(true));
         repo.git_clone(config).unwrap();
 
-        // verify that a single commit is cloned in
-        env::set_current_dir(&Path::new("./temp_test/git2-rs.git/")).unwrap();
+        // verify that repository is bare
         let out = Command::new("git")
-            .args(["rev-parse", "--is-bare-repository"])
+            .args([
+                "-C",
+                "./temp_test/clone_bare/git2-rs.git/",
+                "rev-parse",
+                "--is-bare-repository",
+            ])
             .output()
             .unwrap();
 
-        // clean the directory formed
-        env::set_current_dir(&Path::new("../..")).unwrap();
+        // delete the repository
         Command::new("rm")
-            .args(["temp_test", "-rf"])
+            .args(["-rf", "./temp_test/clone_bare/"])
+            .output()
+            .unwrap();
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "true\n");
+    }
+
+    #[test]
+    fn git_clone_branch_test() {
+        // create temp directories
+        Command::new("mkdir")
+            .args(["-p", "./temp_test/clone_branch"])
             .output()
             .unwrap();
 
-        assert_eq!(String::from_utf8_lossy(&out.stdout), "true\n");
-        sleep(Duration::from_secs(1));
+        // clone git2 using gittwo
+        let mut repo = GitRepository::new();
+        let mut config = CloneConfig::new(
+            "https://github.com/rust-lang/git2-rs.git",
+            Path::new("./temp_test/clone_branch/"),
+        );
+        config.add_flag(CloneFlags::Branch(Some(String::from("curl"))));
+        repo.git_clone(config).unwrap();
+
+        // verify that a single commit is cloned in
+        let out = Command::new("git")
+            .args(["-C", "./temp_test/clone_branch/git2-rs/", "branch"])
+            .output()
+            .unwrap();
+
+        Command::new("rm")
+            .args(["-rf", "./temp_test/clone_branch/"])
+            .output()
+            .unwrap();
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "* curl\n");
+    }
+
+    #[test]
+    fn git_clone_single_branch_test() {
+        // create temp directories
+        Command::new("mkdir")
+            .args(["-p", "./temp_test/clone_single_branch"])
+            .output()
+            .unwrap();
+
+        // clone git2 using gittwo
+        let mut repo = GitRepository::new();
+        let mut config = CloneConfig::new(
+            "https://github.com/rust-lang/git2-rs.git",
+            Path::new("./temp_test/clone_single_branch/"),
+        );
+        config.add_flag(CloneFlags::SingleBranch(true));
+        repo.git_clone(config).unwrap();
+
+        // verify that a single commit is cloned in
+        let out = Command::new("git")
+            .args([
+                "-C",
+                "./temp_test/clone_single_branch/git2-rs/",
+                "branch",
+                "--remotes",
+            ])
+            .output()
+            .unwrap();
+
+        let out = out.stdout.lines().count();
+        Command::new("rm")
+            .args(["-rf", "./temp_test/clone_single_branch/"])
+            .output()
+            .unwrap();
+        assert_eq!(out, 2);
     }
 }
