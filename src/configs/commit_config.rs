@@ -25,7 +25,7 @@ impl CommitConfig {
             flags: CommitFlagsInternals::default(),
         };
         config.add_flag(CommitFlags::Message(message));
-        return config;
+        config
     }
 
     pub fn add_flag(&mut self, flag: CommitFlags) -> &Self {
@@ -63,7 +63,7 @@ impl GitRepository {
                     "Aborting commit due to empty commit message.",
                 ));
             }
-            if !GitRepository::has_indexed_files(&repository) {
+            if !GitRepository::has_indexed_files(repository) {
                 return Ok(());
             }
 
@@ -120,7 +120,7 @@ impl GitRepository {
                 return true;
             }
         }
-        return false;
+        false
     }
 
     pub fn can_commit(repo_dir: &str) -> bool {
@@ -146,6 +146,6 @@ impl GitRepository {
                 return true;
             }
         }
-        return false;
+        false
     }
 }

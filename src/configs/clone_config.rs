@@ -224,7 +224,7 @@ impl GitRepository {
 mod test {
     use super::{CloneConfig, CloneFlags};
     use crate::GitRepository;
-    use std::{io::BufRead, path::Path, process::Command, thread::sleep, time::Duration};
+    use std::{io::BufRead, path::Path, process::Command};
 
     #[test]
     fn git_clone_depth_test() {
