@@ -12,12 +12,12 @@
     - [x] `--branch`
     - [x] `--bare`
     - [x] `--depth`
-    - [ ] `--recusive`
+    - [x] `--recusive`
 - [x] Init
     - [x] `--bare`
     - [x] `--initial-branch`
     - [x] `--separate-git-dir`
-- [x] Add (staging) 
+- [x] Add
     - [x] `--update`
     - [x] `--dry-run`
 - [x] Commit 
@@ -25,20 +25,25 @@
     - [x] `--allow-empty-message`
 - [x] Push 
     - [x] `--set-upstream`
-    - [ ] `--all`
+    - [x] `--all`
 - [ ] Pull
     - [ ] `--unshallow`
     - [ ] `--rebase`
+- [ ] Remote 
+    - [ ] `add`
+    - [ ] `remove`
+    - [ ] `set-head`
+    - [ ] `set-branch`
 - [ ] Restore
     - [ ] `--staged`
 - [ ] Checkout 
-- [ ] Remote 
 - [ ] Status 
 - [ ] Branch
 - [ ] Stash
 - [ ] Fetch
 - [ ] Merge
 - [ ] Reset
+- [ ] Submodule
 
 ### Credentials
 - [x] HTTPS

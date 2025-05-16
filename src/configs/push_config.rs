@@ -1,4 +1,6 @@
-use git2::{CertificateCheckStatus, Error, PushOptions, RemoteCallbacks};
+use std::sync::Barrier;
+
+use git2::{BranchType, CertificateCheckStatus, Error, PushOptions, Refspec, RemoteCallbacks};
 
 use crate::GitRepository;
 
@@ -34,6 +36,7 @@ impl PushConfig {
     pub fn add_flag(&mut self, flag: PushFlags) -> &Self {
         match flag {
             PushFlags::SetUpstream(set) => self.flags.set_upstream = set,
+            PushFlags::All(all) => self.flags.all = all,
         };
         self
     }
@@ -42,10 +45,12 @@ impl PushConfig {
 #[derive(Default, Clone)]
 pub(crate) struct PushFlagsInternal {
     set_upstream: bool,
+    all: bool,
 }
 
 pub enum PushFlags {
     SetUpstream(bool),
+    All(bool),
 }
 
 impl GitRepository {
@@ -101,11 +106,12 @@ impl GitRepository {
             let refspec = format!("{}:{}", src_branch, dest_branch);
             println!("{}", refspec);
 
+            let mut refspec = vec![refspec];
             // +-------+
             // | FLAGS |
             // +-------+
 
-            // upstream
+            // set-upstream
             if config.flags.set_upstream {
                 if let (Some(remote_name), Some(branch_name)) = (&remote_name, &remote_branch_name)
                 {
@@ -121,11 +127,28 @@ impl GitRepository {
                 }
             }
 
+            // all
+            if config.flags.all {
+                let branches = repository.branches(None)?;
+                refspec = vec![];
+                for branch in branches {
+                    let branch = branch.unwrap();
+                    if branch.1 == BranchType::Local {
+                        let local_branch = branch.0;
+                        let remote_branch = local_branch.upstream()?;
+                        let local_branch = String::from_utf8_lossy(local_branch.name_bytes()?);
+                        let remote_branch = String::from_utf8_lossy(remote_branch.name_bytes()?);
+                        let spec = format!("{}:{}", local_branch, remote_branch);
+                        refspec.push(spec);
+                    }
+                }
+            }
+
             // +------+
             // | PUSH |
             // +------+
 
-            remote.push(&[&refspec], Some(&mut options))?;
+            remote.push(&refspec, Some(&mut options))?;
 
             return Ok(());
         }

@@ -1,8 +1,6 @@
-use std::path::{Path, PathBuf};
-
-use git2::{Error, Repository, RepositoryInitOptions};
-
 use crate::GitRepository;
+use git2::{Error, Repository, RepositoryInitOptions};
+use std::path::{Path, PathBuf};
 
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct InitConfig {
@@ -65,5 +63,48 @@ impl GitRepository {
         let repository = Repository::init_opts(config.dir, &init_opts)?;
         self.repository = Some(repository);
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::{path::Path, process::Command};
+
+    use crate::GitRepository;
+
+    use super::{InitConfig, InitFlags};
+
+    #[test]
+    fn git_init_initial_branch_test() {
+        // create temp directories
+        Command::new("mkdir")
+            .args(["-p", "./temp_test/init_initial_branch/"])
+            .output()
+            .unwrap();
+
+        // creating an empty repository with initial branch
+        let mut repo = GitRepository::new();
+        let mut config = InitConfig::new(Path::new("./temp_test/init_initial_branch/"));
+        config.add_flag(InitFlags::InitialBranch(Some(String::from("test"))));
+        repo.git_init(config).unwrap();
+
+        // verifying the repository is formed and has correct branch
+        let out = Command::new("git")
+            .args([
+                "-C",
+                "./temp_test/init_initial_branch/",
+                "branch",
+                "--show-current",
+            ])
+            .output()
+            .unwrap();
+
+        // delete the repository
+        Command::new("rm")
+            .args(["-rf", "./temp_test/init_initial_branch/"])
+            .output()
+            .unwrap();
+
+        assert_eq!(String::from_utf8_lossy(&out.stdout), "test\n");
     }
 }

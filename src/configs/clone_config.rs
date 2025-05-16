@@ -1,5 +1,5 @@
 use std::{
-    path::{Path, PathBuf},
+    path::{self, Path, PathBuf},
     sync::mpsc,
 };
 
@@ -8,7 +8,7 @@ use git2::{
     build::RepoBuilder,
 };
 
-use crate::GitRepository;
+use crate::{GitRepository, helpers::repository};
 
 #[derive(Clone)]
 /// A struct used to specify various details needed to clone a repository.
@@ -92,6 +92,7 @@ impl CloneConfig {
             CloneFlags::Depth(depth) => self.flags.depth = depth,
             CloneFlags::SingleBranch(single) => self.flags.single_branch = single,
             CloneFlags::Bare(bare) => self.flags.bare = bare,
+            CloneFlags::Recursive(rec) => self.flags.recursive = rec,
         }
         self
     }
@@ -103,6 +104,7 @@ pub(crate) struct CloneFlagsInternal {
     pub(crate) depth: Option<usize>,   // Depth(NonZeroUsize),
     pub(crate) single_branch: bool,    // SingleBranch,
     pub(crate) bare: bool,
+    pub(crate) recursive: Option<Vec<String>>,
 }
 
 /// An enum representing the various flags that can be added to the `git clone` command.
@@ -126,6 +128,12 @@ pub enum CloneFlags {
     /// true will set the flag, false will unset it.
     /// Defaults to false.
     Bare(bool),
+
+    /// `--recursive` flag for git clone.
+    /// Some(pathspecs) will set the flag, pass empty vector for all submodules, None will unset
+    /// the flag.
+    /// Defaults to false.
+    Recursive(Option<Vec<String>>),
 }
 
 impl GitRepository {
@@ -214,7 +222,26 @@ impl GitRepository {
 
         // setting fetch options and cloning
         let repo_builder = repo_builder.fetch_options(fetch_options);
-        self.repository = Some(repo_builder.clone(config.get_url(), &repo_path)?);
+        let repository = repo_builder.clone(config.get_url(), &repo_path)?;
+
+        if let Some(pathspecs) = config.flags.recursive {
+            if pathspecs.is_empty() {
+                let submodule = repository.submodules()?;
+                for mut sub in submodule {
+                    // git seems to ignore errors in cloning submodule
+                    // TODO: investigate this
+                    let _ = sub.clone(None);
+                }
+            }
+            for pathspec in pathspecs {
+                if let Ok(mut submodule) = repository.find_submodule(&pathspec) {
+                    // git seems to ignore errors in cloning submodule
+                    // TODO: investigate this
+                    let _ = submodule.clone(None);
+                }
+            }
+        }
+        self.repository = Some(repository);
 
         Ok(())
     }
@@ -259,6 +286,7 @@ mod test {
             .args(["-rf", "./temp_test/clone_depth/"])
             .output()
             .unwrap();
+
         assert_eq!(String::from_utf8_lossy(&out.stdout), "1\n");
     }
 
@@ -295,6 +323,7 @@ mod test {
             .args(["-rf", "./temp_test/clone_bare/"])
             .output()
             .unwrap();
+
         assert_eq!(String::from_utf8_lossy(&out.stdout), "true\n");
     }
 
@@ -325,6 +354,7 @@ mod test {
             .args(["-rf", "./temp_test/clone_branch/"])
             .output()
             .unwrap();
+
         assert_eq!(String::from_utf8_lossy(&out.stdout), "* curl\n");
     }
 
@@ -361,6 +391,7 @@ mod test {
             .args(["-rf", "./temp_test/clone_single_branch/"])
             .output()
             .unwrap();
+
         assert_eq!(out, 2);
     }
 }
