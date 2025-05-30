@@ -4,7 +4,7 @@
 
 ## What works?
 
-*Level 1 items are the commands without any flags, level 2 items are the list of flags. Anything not in this list isn't supported by default. Whatever is in the list but not checked will be added eventually (barring lack of support on the libgit2 side).*
+*Level 1 items are the commands without any flags, level 2 items are the list of flags or subcommands and, level 3 is flags for subcommands (wherever applicable). Anything not in this list isn't supported by default. Whatever is in the list but not checked will be added eventually (barring lack of support on the libgit2 side).*
 
 ### Commands
 - [x] Clone
@@ -26,14 +26,15 @@
 - [x] Push 
     - [x] `--set-upstream`
     - [x] `--all`
+- [x] Remote 
+    - [x] `add` 
+        - [x] `--track`
+    - [x] `remove`
+    - [ ] `set-head`
+    - [ ] `set-branch`
 - [ ] Pull
     - [ ] `--unshallow`
     - [ ] `--rebase`
-- [ ] Remote 
-    - [ ] `add`
-    - [ ] `remove`
-    - [ ] `set-head`
-    - [ ] `set-branch`
 - [ ] Restore
     - [ ] `--staged`
 - [ ] Checkout 

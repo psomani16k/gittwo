@@ -67,7 +67,7 @@ impl GitRepository {
 }
 
 #[cfg(test)]
-mod test {
+mod init_test {
     use std::{path::Path, process::Command};
 
     use crate::GitRepository;

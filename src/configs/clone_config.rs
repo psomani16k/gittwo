@@ -9,7 +9,7 @@ use std::{
 };
 
 #[derive(Clone)]
-/// A struct used to specify various details needed for the `git clone` command.
+/// Specifies details for a `git clone` operation.
 pub struct CloneConfig {
     pub(crate) clone_dir_name: String,
     pub(crate) parent_path: PathBuf,
@@ -19,14 +19,12 @@ pub struct CloneConfig {
 }
 
 impl CloneConfig {
-    /// Takes in a `url` to clone the repository from and
-    /// a `parent_dir` to clone the repository into.
+    /// Creates a new `CloneConfig` with the repository URL and the parent directory for the clone.
     ///
-    /// The clone process will make a directory with the
-    /// repository name in the `parent_dir` and clone the repository
-    /// into this dir, just like how git does.
-    pub fn new(url: impl Into<String>, parent_dir: &Path) -> Self {
-        let target_dir: String = url.into();
+    /// A new directory, named after the repository (e.g., "gittwo" from
+    /// "https://github.com/psomani16k/gittwo.git"), will be created inside `parent_dir`. The repository will be cloned into this new directory.
+    pub fn new(url: String, parent_dir: &Path) -> Self {
+        let target_dir: String = url;
         let url = target_dir.clone();
         let target_dir = target_dir.split("/").last().unwrap();
         let target_dir = match target_dir.strip_suffix(".git") {
@@ -45,26 +43,27 @@ impl CloneConfig {
 
     // getters
 
-    /// Returns the url set for the repository to be cloned.
+    /// Returns the URL of the repository to be cloned.
     pub fn get_url(&self) -> &str {
         &self.url
     }
 
-    /// Returns the consumer (Receiver) end of a mpsc. Intended to receive
-    /// git cli like update messages with an associated index.
+    /// Returns the receiver end of a multi-producer, single-consumer (mpsc) channel.
+    /// This channel is used to receive progress updates during the clone operation,
+    /// similar to Git CLI output, with an associated index of each line.
     pub fn get_update_channel(&mut self) -> mpsc::Receiver<(usize, String)> {
         let (sender, receiver) = mpsc::channel();
         self.sender = Some(sender);
         receiver
     }
 
-    /// Returns the directory where the repository is to be cloned.
+    /// Returns the parent directory where the repository will be cloned.
     pub fn get_parent_path(&self) -> &Path {
         &self.parent_path
     }
 
-    /// Returns the name of the directory where the content of the repository will
-    /// be. The final path of the repository will be the parent_path/clone_dir_name/
+    /// Returns the name of the directory for the cloned repository.
+    /// The full path will be `parent_path/clone_dir_name/`.
     pub fn get_clone_dir_name(&self) -> String {
         if self.flags.bare {
             let mut dir = self.clone_dir_name.clone();
@@ -76,14 +75,13 @@ impl CloneConfig {
 
     // setters
 
-    /// Set a custom name for the cloned repository. This will only change
-    /// the name of the directory that will be formed, parent path will still
-    /// be where the directory is created.
+    /// Sets a custom name for the directory where the repository will be cloned.
+    /// This overrides the default name derived from the repository URL.
     pub fn custom_clone_directory(&mut self, dir: impl Into<String>) {
         self.clone_dir_name = dir.into();
     }
 
-    /// "Pass" a flag to the git clone command.
+    /// Configures a specific flag for the `git clone` operation.
     pub fn add_flag(&mut self, flag: CloneFlags) -> &Self {
         match flag {
             CloneFlags::Branch(branch) => self.flags.branch = branch,
@@ -97,50 +95,67 @@ impl CloneConfig {
 }
 
 #[derive(Clone, Default, PartialEq, Eq, PartialOrd, Ord)]
+/// Internal representation of clone flags, not intended for direct public use.
 pub(crate) struct CloneFlagsInternal {
-    pub(crate) branch: Option<String>, // Branch(String),
-    pub(crate) depth: Option<usize>,   // Depth(NonZeroUsize),
-    pub(crate) single_branch: bool,    // SingleBranch,
+    pub(crate) branch: Option<String>,
+    pub(crate) depth: Option<usize>,
+    pub(crate) single_branch: bool,
     pub(crate) bare: bool,
     pub(crate) recursive: Option<Vec<String>>,
 }
 
-/// An enum representing the various flags that can be added to the `git clone` command.
+/// Represents flags that can be applied to a `git clone` command.
+/// See [git clone documentation](https://git-scm.com/docs/git-clone) for more details on each flag.
 pub enum CloneFlags {
-    /// `--branch` or `-b` flag for git clone.
-    /// Some(branch) will set the flag, None will unset it.
-    /// Defaults to None.
+    /// Corresponds to the [`--branch`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt-code--branchcodeemltnamegtem)
+    /// or `-b` flag.
+    /// `Some(branch_name)` specifies the branch to checkout. `None` uses the remote's default branch.
+    ///
+    /// Defaults to `None`.
     Branch(Option<String>),
 
-    /// `--depth n` flag for git clone.
-    /// Some(n) will set depth to n, None will unset the flag.
-    /// Defaults to None.
+    /// Corresponds to the [`--depth <depth>`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---depthltdepthgt)
+    /// flag.
+    /// `Some(n)` creates a shallow clone with a history truncated to `n` commits. `None` implies a full clone.
+    ///
+    /// Defaults to `None`.
     Depth(Option<usize>),
 
-    /// `--single-branch` flag for git clone.
-    /// true will set the flag, false will unset it.
-    /// Defaults to false.
+    /// Corresponds to the [`--single-branch`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---single-branch)
+    /// flag.
+    /// `true` clones only the history leading to the tip of a single branch (either the one specified by `--branch` or the remote's default).
+    /// `false` clones all branches.
+    ///
+    /// Defaults to `false`.
     SingleBranch(bool),
 
-    /// `--bare` flag for git clone.
-    /// true will set the flag, false will unset it.
-    /// Defaults to false.
+    /// Corresponds to the [`--bare`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---bare)
+    /// flag.
+    /// `true` creates a bare Git repository (no working directory). `false` creates a standard repository.
+    ///
+    /// Defaults to `false`.
     Bare(bool),
 
-    /// `--recursive` flag for git clone.
-    /// Some(pathspecs) will set the flag, pass empty vector for all submodules, None will unset
-    /// the flag.
-    /// Defaults to false.
+    /// Corresponds to the [`--recursive`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---recursive)
+    /// or [`--recurse-submodules[=<pathspec>]`](https://git-scm.com/docs/git-clone#Documentation/git-clone.txt---recurse-submodulesltpathspecgt) flag.
+    /// `Some(pathspecs)` initializes submodules matching the pathspecs. An empty vector initializes all submodules.
+    /// `None` does not initialize submodules.
+    ///
+    /// Defaults to `None`.
     Recursive(Option<Vec<String>>),
 }
 
 impl GitRepository {
-    /// Performs an action equivalent to `git clone`. Returns `Ok(())` if the repository
-    /// is already cloned. If not, clones the repository and makes `self` ready for other
-    /// operations on the repository.
+    /// Clones a Git repository based on the provided `CloneConfig`.
+    ///
+    /// If GitRepository was created using `GitRepository::new()` this will allow you to clone a
+    /// remote repository to the provided directory. If GitRepository was created using
+    /// `GitRepository::open()` calling this function will return an error.
     pub fn git_clone(&mut self, config: CloneConfig) -> Result<(), Error> {
         if self.repository.is_some() {
-            return Ok(());
+            return Err(git2::Error::from_str(
+                "git_clone() called on a pre-existing repository.",
+            ));
         }
         let mut fetch_options = FetchOptions::new();
         let mut repo_builder = RepoBuilder::new();
@@ -246,7 +261,7 @@ impl GitRepository {
 }
 
 #[cfg(test)]
-mod test {
+mod clone_test {
     use super::{CloneConfig, CloneFlags};
     use crate::GitRepository;
     use std::{io::BufRead, path::Path, process::Command};
@@ -262,7 +277,7 @@ mod test {
         // clone git2 using gittwo
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
-            "https://github.com/rust-lang/git2-rs.git",
+            "https://github.com/rust-lang/git2-rs.git".to_string(),
             Path::new("./temp_test/clone_depth"),
         );
         config.add_flag(CloneFlags::Depth(Some(1)));
@@ -299,7 +314,7 @@ mod test {
         // clone git2 using gittwo
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
-            "https://github.com/rust-lang/git2-rs.git",
+            "https://github.com/rust-lang/git2-rs.git".to_string(),
             Path::new("./temp_test/clone_bare"),
         );
         config.add_flag(CloneFlags::Bare(true));
@@ -336,7 +351,7 @@ mod test {
         // clone git2 using gittwo
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
-            "https://github.com/rust-lang/git2-rs.git",
+            "https://github.com/rust-lang/git2-rs.git".to_string(),
             Path::new("./temp_test/clone_branch/"),
         );
         config.add_flag(CloneFlags::Branch(Some(String::from("curl"))));
@@ -367,7 +382,7 @@ mod test {
         // clone git2 using gittwo
         let mut repo = GitRepository::new();
         let mut config = CloneConfig::new(
-            "https://github.com/rust-lang/git2-rs.git",
+            "https://github.com/rust-lang/git2-rs.git".to_string(),
             Path::new("./temp_test/clone_single_branch/"),
         );
         config.add_flag(CloneFlags::SingleBranch(true));
