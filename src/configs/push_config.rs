@@ -1,8 +1,5 @@
-use std::sync::Barrier;
-
-use git2::{BranchType, CertificateCheckStatus, Error, PushOptions, Refspec, RemoteCallbacks};
-
 use crate::GitRepository;
+use git2::{BranchType, CertificateCheckStatus, Error, PushOptions, RemoteCallbacks};
 
 #[derive(Default, Clone)]
 pub struct PushConfig {

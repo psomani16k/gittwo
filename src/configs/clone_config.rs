@@ -1,17 +1,15 @@
-use std::{
-    path::{self, Path, PathBuf},
-    sync::mpsc,
-};
-
+use crate::GitRepository;
 use git2::{
     AutotagOption, CertificateCheckStatus, Error, FetchOptions, Remote, RemoteCallbacks,
     build::RepoBuilder,
 };
-
-use crate::{GitRepository, helpers::repository};
+use std::{
+    path::{Path, PathBuf},
+    sync::mpsc,
+};
 
 #[derive(Clone)]
-/// A struct used to specify various details needed to clone a repository.
+/// A struct used to specify various details needed for the `git clone` command.
 pub struct CloneConfig {
     pub(crate) clone_dir_name: String,
     pub(crate) parent_path: PathBuf,
