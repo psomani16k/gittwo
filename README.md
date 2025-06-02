@@ -30,7 +30,8 @@
     - [x] `add` 
         - [x] `--track`
     - [x] `remove`
-    - [ ] `set-head`
+    - [x] `set-head`
+        - [x] `--delete`
     - [ ] `set-branch`
 - [ ] Pull
     - [ ] `--unshallow`

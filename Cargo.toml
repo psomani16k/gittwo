@@ -13,3 +13,12 @@ repository = "https://github.com/psomani16k/gittwo"
 [dependencies]
 
 git2 = "0.20.1"
+tokio = { version = "1.45.1", features = ["sync"], optional = true }
+
+[features]
+# default = ["tokio-channels"]
+git2-unstable = ["git2/unstable"]
+git2-vendered-libgit2 = ["git2/vendored-libgit2"]
+git2-vendered-openssl = ["git2/vendored-openssl"]
+git2-zlib-ng-compat = ["git2/zlib-ng-compat"]
+tokio-channels = ["dep:tokio"]

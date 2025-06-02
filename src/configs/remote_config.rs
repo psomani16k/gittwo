@@ -49,9 +49,13 @@ impl RemoteConfig {
                     }
                     _ => return Err(error),
                 },
-                RemoteSubCommand::Remove(_) => match flag {
+                RemoteSubCommand::SetHead(_, _) => match flag {
+                    RemoteFlags::Delete(delete) => {
+                        self.flags.delete = delete;
+                    }
                     _ => return Err(error),
                 },
+                RemoteSubCommand::Remove(_) => return Err(error),
             };
         } else {
             match flag {
@@ -59,7 +63,7 @@ impl RemoteConfig {
             };
         }
 
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -68,14 +72,22 @@ pub enum RemoteSubCommand {
     /// Set the `add` subcommand to the RemoteConfig.
     /// Takes two String inputs of remote name and remote url in this order.
     Add(String, String),
+
     /// Set the `remove` subcommand to the RemoteConfig.
     /// Takes the name of the remote to be removed as the input.
     Remove(String),
+
+    /// Set the `set-head` subcommand to the RemoteConfig
+    /// Takes two inputs of remote name and an optional branch in this order.
+    /// The optional branch field can only be empty only if delete flag is set, else it will throw
+    /// an error.
+    SetHead(String, Option<String>),
 }
 
 #[derive(Default)]
 pub(crate) struct RemoteFlagsInternal {
     track: Option<Vec<String>>,
+    delete: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -84,12 +96,18 @@ pub enum RemoteFlags {
     /// Pass in all the branch names into the vector for tracking.
     /// Passing an empty vector unsets the flag.
     Track(Vec<String>),
+
+    /// `-d` or `--delete` flag for `git remote set-head`.
+    /// Pass in true to set the flag and false to unset it.
+    /// Defaults to false.
+    Delete(bool),
 }
 
 impl Display for RemoteFlags {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             RemoteFlags::Track(items) => write!(f, "--track {:?}", items),
+            RemoteFlags::Delete(delete) => write!(f, "--delete {}", delete),
         }
     }
 }
@@ -101,7 +119,7 @@ impl GitRepository {
                 match subcommand {
                     RemoteSubCommand::Add(name, url) => {
                         // git remote add
-                        repository.remote(&name, &url)?;
+                        repository.remote(name, url)?;
 
                         // -t flag
                         if let Some(t) = &config.flags.track {
@@ -113,17 +131,41 @@ impl GitRepository {
                                     "+refs/heads/{}:refs/remotes/{}/{}",
                                     branch, name, branch
                                 );
-                                repository.remote_add_fetch(&name, &spec)?;
+                                repository.remote_add_fetch(name, &spec)?;
                             }
                         }
                     }
                     RemoteSubCommand::Remove(name) => {
                         // git remote remove
-                        repository.remote_delete(&name)?;
+                        repository.remote_delete(name)?;
+                    }
+                    RemoteSubCommand::SetHead(remote, branch) => {
+                        // git remote set-head
+                        if !config.flags.delete && branch.is_some() {
+                            let name = format!("refs/remote/{}/HEAD", remote);
+                            let branch = branch.clone().unwrap();
+                            let target = format!("refs/remote/{}/{}", remote, branch);
+                            repository.reference_symbolic(
+                                &name,
+                                &target,
+                                true,
+                                "set remote HEAD",
+                            )?;
+                        } else if config.flags.delete {
+                            let name = format!("refs/remote/{}/HEAD", remote);
+                            match repository.find_reference(&name) {
+                                Ok(mut reference) => {
+                                    reference.delete()?;
+                                }
+                                Err(ref e) if e.code() == git2::ErrorCode::NotFound => {}
+                                Err(e) => return Err(e),
+                            };
+                        }
                     }
                 }
             } else {
                 // git remote
+                todo!();
             }
 
             return Ok(());
@@ -141,7 +183,7 @@ mod remote_test {
 
     use crate::{
         GitRepository,
-        configs::remote_config::{self, RemoteConfig, RemoteFlags, RemoteSubCommand},
+        configs::remote_config::{RemoteConfig, RemoteFlags, RemoteSubCommand},
     };
 
     #[test]
@@ -155,7 +197,7 @@ mod remote_test {
             .unwrap();
 
         // create a empty repository
-        let out = Command::new("git")
+        let _ = Command::new("git")
             .args(["-C", dir_name, "init"])
             .output()
             .expect("git cli needs to be installed for comparing test results");
