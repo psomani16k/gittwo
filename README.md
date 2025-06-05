@@ -17,6 +17,13 @@
     - [x] `--bare`
     - [x] `--initial-branch`
     - [x] `--separate-git-dir`
+- [x] Remote 
+    - [x] `add` 
+        - [x] `--track`
+    - [x] `remove`
+    - [x] `set-head`
+        - [x] `--delete`
+    - [ ] `set-branch`
 - [x] Add
     - [x] `--update`
     - [x] `--dry-run`
@@ -26,24 +33,21 @@
 - [x] Push 
     - [x] `--set-upstream`
     - [x] `--all`
-- [x] Remote 
-    - [x] `add` 
-        - [x] `--track`
-    - [x] `remove`
-    - [x] `set-head`
-        - [x] `--delete`
-    - [ ] `set-branch`
 - [ ] Pull
     - [ ] `--unshallow`
     - [ ] `--rebase`
 - [ ] Restore
     - [ ] `--staged`
-- [ ] Checkout 
 - [ ] Status 
+- [ ] Fetch
+    - [ ] `--all`
+    - [ ] `--deepen`
+    - [ ] `--unshallow`
+    - [ ] `--recurse-submodules`
+- [ ] Merge
+- [ ] Checkout 
 - [ ] Branch
 - [ ] Stash
-- [ ] Fetch
-- [ ] Merge
 - [ ] Reset
 - [ ] Submodule
 
