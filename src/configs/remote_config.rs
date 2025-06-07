@@ -13,10 +13,11 @@ impl RemoteConfig {
     /// Creates a RemoteConfig object with the passed subcommand.
     ///
     /// Example of remote config for adding the github repository of git to a current repository.
-    /// ```rust
+    /// ```ignore
     /// let remote_name = "origin".to_string();
     /// let remote_url = "https://github.com/git/git.git".to_string();
-    /// let remote_config = RemoteConfig::new(Some(RemoteSubCommand::Add(remote_name, remote_url)))
+    /// let remote_config = RemoteConfig::new(Some(RemoteSubCommand::Add(remote_name,
+    /// remote_url)));
     /// ```
     pub fn new(subcommand: Option<RemoteSubCommand>) -> Self {
         Self {

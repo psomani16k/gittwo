@@ -385,12 +385,12 @@ struct ProgressCallbackHelper {
 
 impl Default for ProgressCallbackHelper {
     fn default() -> Self {
-        return Self {
+        Self {
             last_update_time: SystemTime::now(),
             last_throughput_update_time: SystemTime::now(),
             last_transfered_bytes: 0,
             previous_throughut: 0,
-        };
+        }
     }
 }
 
@@ -411,7 +411,7 @@ impl ProgressCallbackHelper {
                 }
             }
         }
-        return index;
+        index
     }
 
     fn update_resolving(
@@ -441,7 +441,7 @@ impl ProgressCallbackHelper {
             let _ = sender.send((index, msg));
             return index + 1;
         }
-        return index;
+        index
     }
 
     fn update_receiving(
@@ -496,7 +496,7 @@ impl ProgressCallbackHelper {
             let _ = sender.send((index, msg));
             return index + 1;
         }
-        return index;
+        index
     }
 
     fn give_speed(bytes_per_sec: u128) -> (f32, String) {
@@ -516,7 +516,7 @@ impl ProgressCallbackHelper {
             let speed: f32 = bytes_per_sec / 1_024.0;
             return (speed, "KiB/s".to_string());
         }
-        return (bytes_per_sec as f32, "B/s".to_string());
+        (bytes_per_sec as f32, "B/s".to_string())
     }
 
     fn give_data_transfer(bytes_transfered: usize) -> (f32, String) {
@@ -536,7 +536,7 @@ impl ProgressCallbackHelper {
             let data: f32 = bytes_transfered / 1_024.0;
             return (data, "Kib".to_string());
         }
-        return (bytes_transfered as f32, "B".to_string());
+        (bytes_transfered as f32, "B".to_string())
     }
 }
 

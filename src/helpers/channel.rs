@@ -11,13 +11,11 @@ pub(crate) enum ChannelHelper<T> {
 
 impl ChannelHelper<(usize, String)> {
     pub(crate) fn send(&self, message: (usize, String)) -> bool {
-        let result = match self {
+        match self {
             ChannelHelper::StdChannel(sender) => sender.send(message).is_ok(),
 
             #[cfg(feature = "tokio-channels")]
             ChannelHelper::TokioChannel(unbounded_sender) => unbounded_sender.send(message).is_ok(),
-        };
-
-        result
+        }
     }
 }
