@@ -33,6 +33,7 @@
 - [x] Push 
     - [x] `--set-upstream`
     - [x] `--all`
+- [x] Checkout 
 - [ ] Pull
     - [ ] `--unshallow`
     - [ ] `--rebase`
@@ -45,7 +46,6 @@
     - [ ] `--unshallow`
     - [ ] `--recurse-submodules`
 - [ ] Merge
-- [ ] Checkout 
 - [ ] Branch
 - [ ] Stash
 - [ ] Reset
