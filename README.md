@@ -34,20 +34,19 @@
     - [x] `--set-upstream`
     - [x] `--all`
 - [x] Checkout 
+- [x] Fetch
+    - [x] `--unshallow`
+- [ ] Stash
+    - [ ] `apply`
+    - [ ] `push`
 - [ ] Pull
     - [ ] `--unshallow`
     - [ ] `--rebase`
 - [ ] Restore
     - [ ] `--staged`
 - [ ] Status 
-- [ ] Fetch
-    - [ ] `--all`
-    - [ ] `--deepen`
-    - [ ] `--unshallow`
-    - [ ] `--recurse-submodules`
 - [ ] Merge
 - [ ] Branch
-- [ ] Stash
 - [ ] Reset
 - [ ] Submodule
 

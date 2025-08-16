@@ -20,6 +20,10 @@ impl InitConfig {
         &self.dir
     }
 
+    pub fn set_dir(&mut self, dir: &Path) {
+        self.dir = dir.to_path_buf();
+    }
+
     pub fn add_flag(&mut self, flag: InitFlags) -> &Self {
         match flag {
             InitFlags::InitialBranch(branch) => self.flags.initial_branch = branch,

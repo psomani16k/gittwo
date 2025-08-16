@@ -12,6 +12,7 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
+    // testtt
     /// Create a `GitRepository` from an existing repository.
     pub fn open(path: &Path) -> Result<Self, Error> {
         let repo = Repository::open(path)?;
@@ -72,5 +73,11 @@ impl GitRepository {
     pub fn set_user(&mut self, user: impl Into<String>) {
         let http_cred = GitHttpsCredentials::new(Some(user.into()), None);
         self.cred = GitCredentials::Https(http_cred);
+    }
+
+    /// Returns `true` if the repository is cloned/init-ed and ready for other git operations.
+    /// Returns `false` other wise.
+    pub fn is_valid(&self) -> bool {
+        return self.repository.is_some();
     }
 }

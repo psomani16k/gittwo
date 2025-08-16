@@ -101,7 +101,6 @@ impl GitRepository {
             };
 
             let refspec = format!("{}:{}", src_branch, dest_branch);
-            println!("{}", refspec);
 
             let mut refspec = vec![refspec];
             // +-------+

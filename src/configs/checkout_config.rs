@@ -1,7 +1,5 @@
-use std::fmt::format;
-
-use crate::{GitRepository, configs, helpers::credentials::GitCredentials};
-use git2::{Error, Oid, RemoteCallbacks, Repository, build::CheckoutBuilder};
+use crate::GitRepository;
+use git2::{CertificateCheckStatus, Error, RemoteCallbacks, build::CheckoutBuilder};
 
 #[derive(Clone)]
 pub struct CheckoutConfig {
@@ -78,6 +76,11 @@ impl GitRepository {
                 if let Some(remote) = remote {
                     let mut remote = repository.find_remote(remote)?;
                     let mut callback = RemoteCallbacks::new();
+                    // continue even if cert checks fail, if configured so
+                    if self.bypass_certificate_check {
+                        callback
+                            .certificate_check(|_, _| Ok(CertificateCheckStatus::CertificateOk));
+                    }
                     callback.credentials(move |_a: &str, _b, _c| self.cred.get_cred());
                     remote.connect_auth(git2::Direction::Fetch, Some(callback), None)?;
                     if let Ok(remote_heads) = remote.list() {
@@ -122,6 +125,7 @@ impl GitRepository {
                             }
                         }
                     }
+                    remote.disconnect();
                 }
             }
 

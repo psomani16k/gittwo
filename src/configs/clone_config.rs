@@ -581,6 +581,7 @@ mod clone_test {
             .unwrap();
 
         assert_eq!(String::from_utf8_lossy(&out.stdout), "1\n");
+        assert!(repo.is_valid());
     }
 
     #[test]
@@ -618,6 +619,7 @@ mod clone_test {
             .unwrap();
 
         assert_eq!(String::from_utf8_lossy(&out.stdout), "true\n");
+        assert!(repo.is_valid());
     }
 
     #[test]
@@ -649,6 +651,7 @@ mod clone_test {
             .unwrap();
 
         assert_eq!(String::from_utf8_lossy(&out.stdout), "* curl\n");
+        assert!(repo.is_valid());
     }
 
     #[test]
@@ -686,5 +689,6 @@ mod clone_test {
             .unwrap();
 
         assert_eq!(out, 2);
+        assert!(repo.is_valid());
     }
 }

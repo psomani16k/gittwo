@@ -36,6 +36,27 @@ impl CommitConfig {
         self
     }
 
+    pub fn set_name(&mut self, name: String) {
+        self.name = name;
+    }
+
+    pub fn set_email(&mut self, email: String) {
+        self.email = email;
+    }
+
+    pub fn set_name_and_email(&mut self, email: String, name: String) {
+        self.name = name;
+        self.email = email;
+    }
+
+    pub fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    pub fn get_email(&self) -> String {
+        self.email.clone()
+    }
+
     fn get_signature(&self) -> Result<Signature, Error> {
         Signature::now(&self.name, &self.email)
     }

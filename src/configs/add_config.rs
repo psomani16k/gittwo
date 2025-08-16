@@ -56,7 +56,6 @@ impl GitRepository {
                     || status.contains(git2::Status::WT_NEW)
                     || status.contains(git2::Status::WT_DELETED)
                 {
-                    println!("add '{}'", path.display());
                     0
                 } else {
                     1
